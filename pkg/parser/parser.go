@@ -13,6 +13,22 @@ type ConfigValue struct {
 	Type  string
 }
 
+type TIDE struct {
+	data map[string]ConfigValue
+}
+
+type TypeConverter interface {
+	ToString(string) (string, error)
+	ToBool(string) (bool, error)
+	ToInt(string) (int, error)
+	ToInt32(string) (int32, error)
+	ToInt64(string) (int64, error)
+	ToArray(string) ([]string, error)
+	ToIntArray(string) ([]int, error)
+}
+
+type ConversionHelper struct{}
+
 func (cv ConfigValue) Validate() error {
 	switch {
 	case cv.Type == "string":
@@ -52,24 +68,6 @@ func (cv ConfigValue) Validate() error {
 	}
 	return nil
 }
-
-type TIDE struct {
-	data map[string]ConfigValue
-}
-
-// TypeConverter defines an interface for converting types.
-type TypeConverter interface {
-	ToString(string) (string, error)
-	ToBool(string) (bool, error)
-	ToInt(string) (int, error)
-	ToInt32(string) (int32, error)
-	ToInt64(string) (int64, error)
-	ToArray(string) ([]string, error) // Modified to remove the arrayType parameter
-	ToIntArray(string) ([]int, error)
-}
-
-// ConversionHelper is a utility that implements the TypeConverter interface.
-type ConversionHelper struct{}
 
 func (ConversionHelper) ToString(value string) (string, error) {
 	return value, nil
@@ -116,7 +114,6 @@ func (ConversionHelper) ToIntArray(value string) ([]int, error) {
 	return intArray, nil
 }
 
-// getConfigValue retrieves the ConfigValue and performs type checking.
 func (c *TIDE) getConfigValue(key string) (ConfigValue, error) {
 	configVal, ok := c.data[key]
 	if !ok {
@@ -126,7 +123,6 @@ func (c *TIDE) getConfigValue(key string) (ConfigValue, error) {
 	return configVal, nil
 }
 
-// GetString retrieves a string value from the configuration.
 func (c *TIDE) GetString(key string) (string, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
@@ -136,7 +132,6 @@ func (c *TIDE) GetString(key string) (string, error) {
 	return ConversionHelper{}.ToString(configVal.Value)
 }
 
-// GetBool retrieves a bool value from the configuration.
 func (c *TIDE) GetBool(key string) (bool, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
@@ -146,7 +141,6 @@ func (c *TIDE) GetBool(key string) (bool, error) {
 	return ConversionHelper{}.ToBool(configVal.Value)
 }
 
-// GetInt retrieves an int value from the configuration.
 func (c *TIDE) GetInt(key string) (int, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
@@ -156,7 +150,6 @@ func (c *TIDE) GetInt(key string) (int, error) {
 	return ConversionHelper{}.ToInt(configVal.Value)
 }
 
-// GetInt32 retrieves an int32 value from the configuration.
 func (c *TIDE) GetInt32(key string) (int32, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
@@ -166,7 +159,6 @@ func (c *TIDE) GetInt32(key string) (int32, error) {
 	return ConversionHelper{}.ToInt32(configVal.Value)
 }
 
-// GetInt64 retrieves an int64 value from the configuration.
 func (c *TIDE) GetInt64(key string) (int64, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
@@ -176,7 +168,6 @@ func (c *TIDE) GetInt64(key string) (int64, error) {
 	return ConversionHelper{}.ToInt64(configVal.Value)
 }
 
-// GetArray retrieves an array value from the configuration.
 func (c *TIDE) GetArray(key string) ([]string, error) {
 	configVal, err := c.getConfigValue(key)
 	if err != nil {
