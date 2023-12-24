@@ -16,7 +16,7 @@ configuration format.
 
 To install tide-go, use `go get`:
 
-```
+```go
 go get -u github.com/tideconf/tide-go
 ```
 
@@ -27,7 +27,7 @@ directory.
 
 ```go
 go run examples/example.go 
-`` 
+```
 
 # Development
 
