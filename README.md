@@ -16,9 +16,64 @@ configuration format.
 
 To install tide-go, use `go get`:
 
-```go
+```bash
 go get -u github.com/tideconf/tide-go
 ```
+
+# Usage
+
+## Parsing a TIDE file
+
+To parse a TIDE file, use the `ParseFile` function:
+
+```bash
+$ cat config.tide
+database {
+    type: string = "mysql"
+    host: string = "localhost"
+    port: integer = 3306
+    credentials {
+        username: string = "user"
+        password: string = "pass"
+    }
+}
+
+myApp {
+    features: array[string] = ["feature1", "feature2", "feature3"]
+    numbers: array[integer] = [1, 2, 3]
+}
+```
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tideconf/tide-go"
+)
+
+func main() {
+    cfg, err := tide.NewTIDE("./path/to/config.tide")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+    port, err := cfg.GetInt("database.port")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Database Port:", port)
+}
+```
+
+## Environment variables
+
+TIDE configuration values can be overridden by environment variables. The
+environment variable name is the uppercased path to the configuration value,
+with the path separator replaced by an underscore.
+
+For example `database.credentials.username` would be overridden by the
+`DATABASE_CREDENTIALS_USERNAME` environment variable.
 
 # Example
 
@@ -29,7 +84,12 @@ directory.
 go run examples/example.go 
 ```
 
-# Development
+# Contributing
 
-This is only capable of parsing TIDE files at the moment. It might be expanded
-to support function calls / embedded logic in the future.
+Contributions are welcome! Please feel free to submit a pull request or open an
+issue if you find a bug or have a feature request.
+
+# License
+
+tide-go is licensed under the Apache 2.0 license. See the LICENSE file for more
+information.

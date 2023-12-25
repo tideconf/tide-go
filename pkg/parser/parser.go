@@ -115,6 +115,26 @@ func (ConversionHelper) ToIntArray(value string) ([]int, error) {
 }
 
 func (c *TIDE) getConfigValue(key string) (ConfigValue, error) {
+	// Convert hierarchical key to environment variable format
+	envKey := strings.ReplaceAll(key, ".", "_")
+	envKey = strings.ToUpper(envKey)
+
+	// Check for an environment variable
+	envVal, exists := os.LookupEnv(envKey)
+	if exists {
+		// Determine if the key is expected to be an array
+		if strings.Contains(key, "array") {
+			// Split the environment variable string by comma to create an array
+			arrayElements := strings.Split(envVal, ",")
+			// Join elements with the required format (e.g., ["elem1", "elem2"])
+			joinedElements := fmt.Sprintf("[\"%s\"]", strings.Join(arrayElements, "\", \""))
+			return ConfigValue{Value: joinedElements, Type: "array[string]"}, nil
+		}
+		// If it's not an array, assume it's a string for simplicity
+		return ConfigValue{Value: envVal, Type: "string"}, nil
+	}
+
+	// If not found in environment, check the file configuration
 	configVal, ok := c.data[key]
 	if !ok {
 		return ConfigValue{}, fmt.Errorf("key not found")
