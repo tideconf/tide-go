@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -121,4 +122,39 @@ func TestArray(t *testing.T) {
 	if err == nil {
 		t.Errorf("GetArray should return an error for non-existing key")
 	}
+}
+
+// TestGetConfigValueWithEnv tests the getConfigValue method with environment variables.
+func TestGetConfigValueWithEnv(t *testing.T) {
+	// Set environment variables
+	os.Setenv("STRINGKEY", "envValue1")
+	os.Setenv("INTKEY", "456")
+	os.Setenv("ARRAYKEY", "envFeature1,envFeature2,envFeature3")
+
+	tide := createTestTIDE()
+
+	// Test string value overridden by environment variable
+	stringVal, err := tide.GetString("stringKey")
+	if err != nil || stringVal != "envValue1" {
+		t.Errorf("Expected envValue1, got %v, error: %v", stringVal, err)
+	}
+
+	// Test int value overridden by environment variable
+	intVal, err := tide.GetInt("intKey")
+	if err != nil || intVal != 456 {
+		t.Errorf("Expected 456, got %v, error: %v", intVal, err)
+	}
+
+	// Test array value overridden by environment variable
+	expectedArray := []string{"\"envFeature1\"", "\"envFeature2\"", "\"envFeature3\""}
+
+	arrayVal, err := tide.GetArray("arrayKey")
+	if err != nil || !reflect.DeepEqual(arrayVal, expectedArray) {
+		t.Errorf("Expected %v, got %v, error: %v", expectedArray, arrayVal, err)
+	}
+
+	// Unset environment variables
+	os.Unsetenv("STRINGKEY")
+	os.Unsetenv("INTKEY")
+	os.Unsetenv("ARRAYKEY")
 }
