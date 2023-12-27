@@ -57,12 +57,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+    
     port, err := cfg.GetInt("database.port")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Database Port:", port)
+    
+    fmt.Println("Database Port:", port)
 }
 ```
 
