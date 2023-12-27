@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"path/filepath"
 )
 
 type ConfigValue struct {
@@ -28,6 +30,41 @@ type TypeConverter interface {
 }
 
 type ConversionHelper struct{}
+
+func parseImportStatement(line string) (string, bool) {
+	if strings.HasPrefix(line, "import") {
+		parts := strings.Fields(line)
+		if len(parts) == 2 {
+			return strings.Trim(parts[1], "\""), true
+		}
+	}
+	return "", false
+}
+
+func loadConfigFile(basePath, importFile string, importedFiles map[string]bool) (*TIDE, error) {
+	// Append '.tide' extension if not present
+	if !strings.HasSuffix(importFile, ".tide") {
+		importFile = strings.ReplaceAll(importFile, ".", "/") + ".tide"
+	}
+
+	// Resolve the full path of the importFile relative to basePath
+	dir := filepath.Dir(basePath)
+	fullPath := filepath.Join(dir, importFile)
+
+	// Check for circular imports
+	if importedFiles[fullPath] {
+		return nil, fmt.Errorf("circular import detected: %s", fullPath)
+	}
+	importedFiles[fullPath] = true
+
+	// Load the configuration file
+	tide, err := NewTIDE(fullPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return tide, nil
+}
 
 func (cv ConfigValue) Validate() error {
 	switch {
@@ -196,7 +233,6 @@ func (c *TIDE) GetArray(key string) ([]string, error) {
 
 	return ConversionHelper{}.ToArray(configVal.Value)
 }
-
 func NewTIDE(filepath string) (*TIDE, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -208,11 +244,25 @@ func NewTIDE(filepath string) (*TIDE, error) {
 	scanner := bufio.NewScanner(file)
 
 	var currentContext []string
+	importedFiles := make(map[string]bool) // Track imported files to prevent circular imports
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if importFile, ok := parseImportStatement(line); ok {
+			// Pass the current file path as basePath and the importFile to loadConfigFile
+			importedConfig, err := loadConfigFile(filepath, importFile, importedFiles)
+			if err != nil {
+				return nil, err
+			}
+			// Merge configurations: importedConfig takes precedence
+			for k, v := range importedConfig.data {
+				cfg.data[k] = v
+			}
 			continue
 		}
 
@@ -242,6 +292,12 @@ func NewTIDE(filepath string) (*TIDE, error) {
 			Value: strings.TrimSpace(parts[1]),
 			Type:  strings.TrimSpace(keyParts[1]),
 		}
+
+		// Trim quotation marks for string values
+		if cfgValue.Type == "string" {
+			cfgValue.Value = strings.Trim(cfgValue.Value, "\"")
+		}
+
 		if err := cfgValue.Validate(); err != nil {
 			return nil, fmt.Errorf("validation error for key %s: %v", key, err)
 		}

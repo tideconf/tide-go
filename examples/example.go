@@ -44,4 +44,10 @@ func main() {
 	for _, number := range numbers {
 		fmt.Println("-", number)
 	}
+
+	logLevel, err := cfg.GetString("logging.level")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Logging Level:", logLevel)
 }

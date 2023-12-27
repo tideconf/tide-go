@@ -2,7 +2,9 @@ package parser
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -157,4 +159,29 @@ func TestGetConfigValueWithEnv(t *testing.T) {
 	os.Unsetenv("STRINGKEY")
 	os.Unsetenv("INTKEY")
 	os.Unsetenv("ARRAYKEY")
+}
+
+func TestImportConfig(t *testing.T) {
+
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	configFile := filepath.Join(dir, "../../test/main_config.tide")
+
+	cfg, err := NewTIDE(configFile)
+
+	if err != nil {
+		t.Fatalf("Failed to load config: %v", err)
+	}
+
+	// Test value from main config
+	host, err := cfg.GetString("database.host")
+	if err != nil || host != "localhost" {
+		t.Errorf("Expected 'localhost', got %v, error: %v", host, err)
+	}
+
+	// Test value from imported config
+	logLevel, err := cfg.GetString("logging.level")
+	if err != nil || logLevel != "info" {
+		t.Errorf("Expected 'info', got %v, error: %v", logLevel, err)
+	}
 }

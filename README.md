@@ -66,6 +66,31 @@ func main() {
 }
 ```
 
+## Importing a TIDE file into another TIDE file
+
+It is possible to merge configurations, with the imported configuration taking
+precedence over the base configuration in case of conflicts. This is useful for
+splitting up configuration into multiple files.
+
+Circular imports are not allowed.
+
+To import a TIDE file into another TIDE file, use the `ImportFile` function:
+
+```bash
+$ cat config.tide
+import "additional_settings"
+
+database {
+    host: string = "localhost"
+    port: integer = 3306
+}
+
+$ cat additional_settings.tide
+logging {
+    level: string = "info"
+}
+```
+
 ## Environment variables
 
 TIDE configuration values can be overridden by environment variables. The
