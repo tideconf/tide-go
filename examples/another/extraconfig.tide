@@ -1,0 +1,8 @@
+server {
+    host: string = "0.0.0.0"
+    port: integer = 8080
+}
+
+logging {
+    level: string = "info"
+}

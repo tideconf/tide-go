@@ -1,0 +1,6 @@
+import "additional_settings"
+
+database {
+    host: string = "localhost"
+    port: integer = 3306
+}

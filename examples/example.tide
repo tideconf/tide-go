@@ -1,4 +1,6 @@
-# This is an inline comment
+# Import and layer another config
+import "another.extraconfig"
+
 database {
     type: string = "mysql"
     host: string = "localhost"
@@ -13,3 +15,4 @@ myApp {
     features: array[string] = ["feature1", "feature2", "feature3"]
     numbers: array[integer] = [1, 2, 3]
 }
+
